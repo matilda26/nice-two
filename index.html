@@ -12,29 +12,19 @@
         <link rel="stylesheet" href="style.css">
         <script type="text/javascript" src="paper-full.js"></script>
 
-        <script type="text/paperscript" canvas="canvas">
+        <!-- <script type="text/paperscript" canvas="canvas">
 
-        var points = 20;
+       var points = 20;
 
         var length = 50;
 
-        var path = new Path({strokeColor: 'blue', strokeWidth: 50, strokeCap: 'round'});
+        var path = new Path({strokeColor: 'blue', strokeWidth: 50, strokeCap: 'round', opacity: 0.5});
 
         var start = view.center / [2.5, 1.2];
         for (var i = 0; i < points; i++)
             path.add(start + new Point(i * length, 0));
 
-        function onMouseMove(event) {
-            path.firstSegment.point = event.point;
-            for (var i = 0; i < points - 1; i++) {
-            var segment = path.segments[i];
-            var nextSegment = segment.next;
-            var vector = segment.point - nextSegment.point;
-            vector.length = length;
-            nextSegment.point = segment.point - vector;
-            }
-            path.smooth({type: 'continuous'});
-        }
+        
 
         var palette = ['#6534ff', '#62bcfa', '#fccdd3', '#bbc4ef']
 
@@ -67,8 +57,130 @@
             path.clone();
             path.strokeColor = stroke[current];
 
-            path.strokeWidth = Math.floor(Math.random() * 100)
+            path.strokeWidth = (Math.floor(Math.random() * 80) + 20)
         })
+
+        function onMouseMove(event) {
+            path.firstSegment.point = event.point;
+            for (var i = 0; i < points - 1; i++) {
+            var segment = path.segments[i];
+            var nextSegment = segment.next;
+            var vector = segment.point - nextSegment.point;
+            vector.length = length;
+            nextSegment.point = segment.point - vector;
+            }
+            path.smooth({type: 'continuous'});
+        }
+        </script> -->
+
+        <script type="text/paperscript" canvas="canvas">
+        var values = {
+            friction: 0.8,
+            timeStep: 0.01,
+            amount: 15,
+            mass: 2,
+            count: 0
+        };
+        values.invMass = 1 / values.mass;
+        
+        var wave, springs;
+        var size = view.size * [1.2, 1];
+        
+        var Spring = function(a, b, strength, restLength) {
+            this.a = a;
+            this.b = b;
+            this.restLength = restLength || 80;
+            this.strength = strength ? strength : 0.55;
+            this.mamb = values.invMass * values.invMass;
+        };
+        
+        Spring.prototype.update = function() {
+            var delta = this.b - this.a;
+            var dist = delta.length;
+            var normDistStrength = (dist - this.restLength) /
+                    (dist * this.mamb) * this.strength;
+            delta.y *= normDistStrength * values.invMass * 0.2;
+            if (!this.a.fixed)
+                this.a.y += delta.y;
+            if (!this.b.fixed)
+                this.b.y -= delta.y;
+        };
+        
+        
+        function createPath(strength) {
+            var wave = new Path({
+                fillColor: 'black'
+            });
+            springs = [];
+            for (var i = 0; i <= values.amount; i++) {
+                var segment = wave.add(new Point(i / values.amount, 0.5) * size);
+                var point = segment.point;
+                if (i == 0 || i == values.amount)
+                    point.y += size.height;
+                point.px = point.x;
+                point.py = point.y;
+                // The first two and last two points are fixed:
+                point.fixed = i < 2 || i > values.amount - 2;
+                if (i > 0) {
+                    var spring = new Spring(segment.previous.point, point, strength);
+                    springs.push(spring);
+                }
+            }
+            wave.position.x -= size.width / 4;
+            return wave;
+        }
+        
+        function onResize() {
+            if (wave)
+                wave.remove();
+            size = view.bounds.size * [2, 1];
+            wave = createPath(0.1);
+        }
+        
+        function onFrame(event) {
+            updateWave(wave);
+        }
+        
+        function updateWave(wave) {
+            var force = 1 - values.friction * values.timeStep * values.timeStep;
+            for (var i = 0, l = wave.segments.length; i < l; i++) {
+                var point = wave.segments[i].point;
+                var dy = (point.y - point.py) * force;
+                point.py = point.y;
+                point.y = Math.max(point.y + dy, 0);
+            }
+        
+            for (var j = 0, l = springs.length; j < l; j++) {
+                springs[j].update();
+            }
+            wave.smooth({ type: 'continuous' });
+        }
+        
+        function onKeyDown(event) {
+            if (event.key == 'space') {
+                wave.fullySelected = !wave.fullySelected;
+                wave.fillColor = wave.fullySelected ? null : 'black';
+            }
+        }
+
+        function onMouseMove(event) {
+            var location = wave.getNearestLocation(event.point);
+            var segment = location.segment;
+            var point = segment.point;
+        
+            if (!point.fixed && location.distance < size.height / 4) {
+                var y = event.point.y;
+                point.y += (y - point.y) / 6;
+                if (segment.previous && !segment.previous.fixed) {
+                    var previous = segment.previous.point;
+                    previous.y += (y - previous.y) / 24;
+                }
+                if (segment.next && !segment.next.fixed) {
+                    var next = segment.next.point;
+                    next.y += (y - next.y) / 24;
+                }
+            }
+        }
         </script>
     </head>
     <body>
