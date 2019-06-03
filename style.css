@@ -1,0 +1,59 @@
+@font-face {
+    font-family: 'Sharp Slab TRIAL';
+    src: url('./fonts/SharpSlabTRIAL-Bold.woff2') format('woff2'),
+        url('./fonts/SharpSlabTRIAL-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+canvas[resize] {
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+}
+
+body {
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    padding: 0;
+}
+
+.title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    font-size: 60px;
+    font-family: 'Sharp Slab TRIAL';
+}
+
+/* .bg-black {
+    background-color: black;
+  }
+  
+  .bg-white {
+    background-color: white;
+  }
+  
+  .bg-red {
+    background-color: red;
+  }
+  
+  .bg-yellow {
+    background-color: yellow;
+  }
+  
+  .bg-green {
+    background-color: green;
+  }
+  
+  .bg-blue {
+    background-color: blue;
+  }
+   */

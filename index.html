@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Nice Studio</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+        <script type="text/javascript" src="paper-full.js"></script>
+
+        <script type="text/paperscript" canvas="canvas">
+
+        var points = 20;
+
+        var length = 50;
+
+        var path = new Path({strokeColor: 'blue', strokeWidth: 50, strokeCap: 'round'});
+
+        var start = view.center / [2.5, 1.2];
+        for (var i = 0; i < points; i++)
+            path.add(start + new Point(i * length, 0));
+
+        function onMouseMove(event) {
+            path.firstSegment.point = event.point;
+            for (var i = 0; i < points - 1; i++) {
+            var segment = path.segments[i];
+            var nextSegment = segment.next;
+            var vector = segment.point - nextSegment.point;
+            vector.length = length;
+            nextSegment.point = segment.point - vector;
+            }
+            path.smooth({type: 'continuous'});
+        }
+
+        var palette = ['#6534ff', '#62bcfa', '#fccdd3', '#bbc4ef']
+
+        var colors = [
+            "bg-black",
+            "bg-red",
+            "bg-yellow",
+            "bg-green",
+            "bg-blue",
+            "bg-white"
+        ];
+        var stroke = [
+            '#0000FF',
+            '#0000FF',
+            '#0000FF',
+            '#0000FF',
+            '#0000FF'
+        ];
+        var current = 0;
+        var body = document.querySelector('canvas');
+
+        body.addEventListener('click', function () {
+            body.classList.remove(colors[current]);
+
+            current = current + 1;
+            if (current === 5) {
+                current = 0;
+            }
+            body.classList.add(colors[current]);
+            path.clone();
+            path.strokeColor = stroke[current];
+
+            path.strokeWidth = Math.floor(Math.random() * 100)
+        })
+        </script>
+    </head>
+    <body>
+        <h1 class='title'>nice</h1>
+        <canvas id="canvas" resize="resize"></canvas>
+    </body>
+</html>
